@@ -5,7 +5,7 @@ import agh.ics.ooproject1.gui.IGuiObserver;
 public class SimulationEngine implements Runnable {
     private AbstractWorldMap map;
     private IGuiObserver gui;
-    private int[] genome = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7};
+    public boolean flag = true;
 
     public SimulationEngine(AbstractWorldMap map, int animalCount, IGuiObserver gui) {
         this.map = map;
@@ -29,21 +29,17 @@ public class SimulationEngine implements Runnable {
     @Override
     public void run() {
         while (true) {
-            this.map.removeDeadAnimals();
-            this.map.moveAllAnimals();
-            this.map.eat();
-            this.map.spawn();
-            this.map.growGrass();
+            map.removeDeadAnimals();
+            map.moveAllAnimals();
+            map.eat();
+            map.spawn();
+            map.growGrass();
+            gui.newDay(map);
             try {
-                Thread.sleep(100);
+                Thread.sleep(80);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            this.gui.newDay();
         }
-    }
-
-    private void placeGrass() {
-
     }
 }

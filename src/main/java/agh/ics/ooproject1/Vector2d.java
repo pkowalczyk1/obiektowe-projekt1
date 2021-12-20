@@ -14,31 +14,31 @@ public class Vector2d {
     }
 
     public String toString() {
-        return "(" + this.x + ", " + this.y + ")";
+        return "(" + x + ", " + y + ")";
     }
 
     public boolean precedes(Vector2d other) {
-        return this.x <= other.x && this.y <= other.y;
+        return x <= other.x && y <= other.y;
     }
 
     public boolean follows(Vector2d other) {
-        return this.x >= other.x && this.y >= other.y;
+        return x >= other.x && y >= other.y;
     }
 
     public Vector2d upperRight(Vector2d other) {
-        return new Vector2d(max(this.x, other.x), max(this.y, other.y));
+        return new Vector2d(max(x, other.x), max(y, other.y));
     }
 
     public Vector2d lowerLeft(Vector2d other) {
-        return new Vector2d(min(this.x, other.x), min(this.y, other.y));
+        return new Vector2d(min(x, other.x), min(y, other.y));
     }
 
     public Vector2d add(Vector2d other) {
-        return new Vector2d(this.x + other.x, this.y + other.y);
+        return new Vector2d(x + other.x, y + other.y);
     }
 
     public Vector2d subtract(Vector2d other) {
-        return new Vector2d(this.x - other.x, this.y - other.y);
+        return new Vector2d(x - other.x, y - other.y);
     }
 
     public boolean equals(Object other) {
@@ -47,15 +47,15 @@ public class Vector2d {
         if (!(other instanceof Vector2d))
             return false;
         Vector2d that = (Vector2d) other;
-        return that.x == this.x && that.y == this.y;
+        return that.x == x && that.y == y;
     }
 
     public Vector2d opposite() {
-        return new Vector2d(-1 * this.x, -1 * this.y);
+        return new Vector2d(-1 * x, -1 * y);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.x, this.y);
+        return Objects.hash(x, y);
     }
 }
