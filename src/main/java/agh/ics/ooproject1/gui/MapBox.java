@@ -13,11 +13,12 @@ public class MapBox {
     private AbstractWorldMap map;
     private SimulationEngine engine;
     private Thread thread;
-    private final int mapWidth = 300;
+    private final int mapWidth = 500;
     private VBox wrapper;
+    private Charts charts;
     private HBox mapAndCharts;
     private VBox statistics;
-    private VBox charts;
+    private VBox chartBox;
     private VBox mapAndButton;
     private Button startStop;
     private GridPane grid;
@@ -27,16 +28,18 @@ public class MapBox {
         this.map = map;
         this.thread = thread;
         wrapper = new VBox(15);
+        charts = new Charts();
         mapAndCharts = new HBox(15);
         statistics = new VBox(5);
-        charts = new VBox(10);
+        chartBox = new VBox(10);
         mapAndButton = new VBox(10);
         startStop = new Button("Start/stop");
         grid = new GridPane();
         makeGrid();
         mapAndButton.getChildren().addAll(grid, startStop);
-        mapAndCharts.getChildren().addAll(mapAndButton, charts);
-        statistics.getChildren().add(new Label("Current animals: " + this.map.count));
+        chartBox.getChildren().addAll(charts.getAllCharts());
+        mapAndCharts.getChildren().addAll(chartBox, mapAndButton);
+        statistics.getChildren().add(new Label("Current animals: " + this.map.animalCount));
         wrapper.getChildren().addAll(mapAndCharts, statistics);
         startStop.setOnAction((event) -> {
             this.engine.flag = !this.engine.flag;
@@ -55,6 +58,7 @@ public class MapBox {
 
     public void refresh() {
         makeGrid();
+        charts.addDataToCharts(map.animalCount, map.grassCount);
     }
 
     public void makeGrid() {

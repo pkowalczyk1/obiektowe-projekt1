@@ -18,7 +18,8 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     protected int height;
     protected Vector2d jungleLowerLeft;
     protected Vector2d jungleUpperRight;
-    public int count;
+    public int animalCount = 0;
+    public int grassCount = 0;
 
     public List<Animal> animalsAt(Vector2d position) {
         return animals.get(position);
@@ -81,9 +82,10 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     public void place(IWorldMapElement element) {
         if (element instanceof Grass) {
             grassFields.put(element.getPosition(), (Grass) element);
+            grassCount++;
         }
         else if (element instanceof Animal) {
-            count++;
+            animalCount++;
             animalsList.add((Animal) element);
             if (animals.get(element.getPosition()) == null) {
                 List<Animal> newList = new ArrayList<>();
@@ -108,9 +110,10 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     public void remove(IWorldMapElement element) {
         if (element instanceof Grass) {
             grassFields.remove(element.getPosition());
+            grassCount--;
         }
         else if (element instanceof Animal) {
-            count--;
+            animalCount--;
             animalsList.remove(element);
             toPlace.remove(element);
             List<Animal> animalsAtPos = animals.get(element.getPosition());

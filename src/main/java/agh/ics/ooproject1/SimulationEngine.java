@@ -36,7 +36,7 @@ public class SimulationEngine implements Runnable {
             map.growGrass();
             gui.newDay(map);
             try {
-                Thread.sleep(80);
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
