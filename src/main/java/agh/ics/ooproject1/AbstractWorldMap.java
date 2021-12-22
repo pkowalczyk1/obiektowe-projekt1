@@ -11,6 +11,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     protected List<Animal> animalsList = new ArrayList<>();
     protected Map<Vector2d, Grass> grassFields = new ConcurrentHashMap<>();
     protected List<Animal> toPlace = new CopyOnWriteArrayList<>();
+    protected Map<List<Integer>, Integer> genomesCount = new LinkedHashMap<>();
     protected int grassEnergy;
     public int moveEnergy;
     protected int startEnergy;
@@ -18,8 +19,13 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     protected int height;
     protected Vector2d jungleLowerLeft;
     protected Vector2d jungleUpperRight;
+    public int epoch = 1;
     public int animalCount = 0;
     public int grassCount = 0;
+    public double energyAvg = startEnergy;
+    public double lifeSpanAvg = 0;
+    public int deadAnimalsCount = 0;
+    public List<Integer> mostCommonGenome;
 
     public List<Animal> animalsAt(Vector2d position) {
         return animals.get(position);
@@ -39,6 +45,10 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
 
     public Map<Vector2d, Grass> getGrassFields() {
         return grassFields;
+    }
+
+    public List<Animal> getAnimalsList() {
+        return animalsList;
     }
 
     public boolean isOccupied(Vector2d position) {
@@ -86,6 +96,13 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
         else if (element instanceof Animal) {
             animalCount++;
+            if (genomesCount.get(((Animal) element).getGenes()) == null) {
+                genomesCount.put(((Animal) element).getGenes(), 1);
+            }
+            else {
+                int count = genomesCount.get(((Animal) element).getGenes());
+                genomesCount.put(((Animal) element).getGenes(), count + 1);
+            }
             animalsList.add((Animal) element);
             if (animals.get(element.getPosition()) == null) {
                 List<Animal> newList = new ArrayList<>();
@@ -114,6 +131,13 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
         else if (element instanceof Animal) {
             animalCount--;
+            int count = genomesCount.get(((Animal) element).getGenes());
+            if (count == 1) {
+                genomesCount.remove(((Animal) element).getGenes());
+            }
+            else {
+                genomesCount.put(((Animal) element).getGenes(), count - 1);
+            }
             animalsList.remove(element);
             toPlace.remove(element);
             List<Animal> animalsAtPos = animals.get(element.getPosition());
@@ -171,6 +195,8 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         List<Animal> toDeletionToPlace = new ArrayList<>();
         for (Animal animal : animalsList) {
             if (animal.getEnergy() <= 0) {
+                lifeSpanAvg = (lifeSpanAvg*deadAnimalsCount + epoch - animal.getEpochBorn()) / (deadAnimalsCount+1);
+                deadAnimalsCount++;
                 toDeletion.add(animal);
             }
         }
@@ -225,7 +251,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
 //                animalsAtThisPos.sort(Comparator.comparingInt(Animal::getEnergy));
                 Animal animal1 = animalsAtThisPos.get(animalsAtThisPos.size() - 1);
                 Animal animal2 = animalsAtThisPos.get(animalsAtThisPos.size() - 2);
-                if (animal1.getEnergy() >= 30 && animal2.getEnergy() >= 30) {
+                if (animal1.getEnergy() >= startEnergy / 2 && animal2.getEnergy() >= startEnergy / 2) {
                     toSpawn.add(spawnNewAnimal(animal1, animal2));
                 }
             }
@@ -246,19 +272,20 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         List<Integer> genomePart2;
 
         if (check == 1) {
-            genomePart1 = animal1.getGenome().subList(0, sliceIndex + 1);
-            genomePart2 = animal2.getGenome().subList(sliceIndex + 1, animal2.getGenome().size());
+            genomePart1 = animal1.getGenes().subList(0, sliceIndex + 1);
+            genomePart2 = animal2.getGenes().subList(sliceIndex + 1, animal2.getGenes().size());
         }
         else {
             sliceIndex = 32 - sliceIndex;
-            genomePart1 = animal2.getGenome().subList(0, sliceIndex + 1);
-            genomePart2 = animal1.getGenome().subList(sliceIndex + 1, animal1.getGenome().size());
+            genomePart1 = animal2.getGenes().subList(0, sliceIndex + 1);
+            genomePart2 = animal1.getGenes().subList(sliceIndex + 1, animal1.getGenes().size());
         }
         newGenome = Stream.concat(genomePart1.stream(), genomePart2.stream()).collect(Collectors.toList());
+        Collections.sort(newGenome);
 
         animal1.decreaseEnergy(energy1);
         animal2.decreaseEnergy(energy2);
-        return new Animal(animal1.getPosition(), this, new Genome(newGenome), energy1 + energy2);
+        return new Animal(animal1.getPosition(), this, new Genome(newGenome), energy1 + energy2, epoch);
     }
 
     public int getWidth() {

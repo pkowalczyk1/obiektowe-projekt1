@@ -9,12 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 
 public class App extends Application implements IGuiObserver {
     private AbstractWorldMap map1, map2;
@@ -109,50 +104,50 @@ public class App extends Application implements IGuiObserver {
         primaryStage.show();
     }
 
-    private void makeGrid(AbstractWorldMap map) {
-        GridPane grid;
-        if (map instanceof UnboundedMap) {
-            grid = this.grid1;
-        }
-        else {
-            grid = this.grid2;
-        }
-        grid.getChildren().clear();
-        grid.getColumnConstraints().clear();
-        grid.getRowConstraints().clear();
-        double cellSize = Math.min(this.mapWidth/map.getWidth(), this.mapWidth/map.getHeight());
-        grid.setPrefSize(map.getWidth()*cellSize, map.getHeight()*cellSize);
-
-        for (int i=0; i<map.getWidth(); i++) {
-            grid.getColumnConstraints().add(new ColumnConstraints(cellSize));
-        }
-
-        for (int i=0; i<map.getHeight(); i++) {
-            grid.getRowConstraints().add(new RowConstraints(cellSize));
-        }
+//    private void makeGrid(AbstractWorldMap map) {
+//        GridPane grid;
+//        if (map instanceof UnboundedMap) {
+//            grid = this.grid1;
+//        }
+//        else {
+//            grid = this.grid2;
+//        }
+//        grid.getChildren().clear();
+//        grid.getColumnConstraints().clear();
+//        grid.getRowConstraints().clear();
+//        double cellSize = Math.min(this.mapWidth/map.getWidth(), this.mapWidth/map.getHeight());
+//        grid.setPrefSize(map.getWidth()*cellSize, map.getHeight()*cellSize);
+//
+//        for (int i=0; i<map.getWidth(); i++) {
+//            grid.getColumnConstraints().add(new ColumnConstraints(cellSize));
+//        }
+//
+//        for (int i=0; i<map.getHeight(); i++) {
+//            grid.getRowConstraints().add(new RowConstraints(cellSize));
+//        }
 
 //        grid.add(new Label("test"), 0, 0);
 
-        grid.setStyle("-fx-background-color: rgb(255, 153, 0)");
-
-        Map<Vector2d, Grass> grassMap = map.getGrassFields();
-        for (Grass grass : grassMap.values()) {
-            Pane pane = new StackPane();
-            pane.setStyle("-fx-background-color: darkgreen");
-            pane.setPrefSize(cellSize, cellSize);
-            grid.add(pane, grass.getPosition().x, map.getHeight() - grass.getPosition().y - 1);
-        }
-
-        List<Animal> toPlace = map.getToPlace();
-        for (Animal animal : toPlace) {
-            Pane pane = new StackPane();
-            pane.setPrefSize(cellSize, cellSize);
-            Rectangle shape = animal.getImage();
-            shape.setWidth(cellSize);
-            shape.setHeight(cellSize);
-            pane.getChildren().add(shape);
-            grid.add(pane, animal.getPosition().x, map.getHeight() - animal.getPosition().y - 1);
-        }
+//        grid.setStyle("-fx-background-color: rgb(255, 153, 0)");
+//
+//        Map<Vector2d, Grass> grassMap = map.getGrassFields();
+//        for (Grass grass : grassMap.values()) {
+//            Pane pane = new StackPane();
+//            pane.setStyle("-fx-background-color: darkgreen");
+//            pane.setPrefSize(cellSize, cellSize);
+//            grid.add(pane, grass.getPosition().x, map.getHeight() - grass.getPosition().y - 1);
+//        }
+//
+//        List<Animal> toPlace = map.getToPlace();
+//        for (Animal animal : toPlace) {
+//            Pane pane = new StackPane();
+//            pane.setPrefSize(cellSize, cellSize);
+//            Rectangle shape = animal.getImage();
+//            shape.setWidth(cellSize);
+//            shape.setHeight(cellSize);
+//            pane.getChildren().add(shape);
+//            grid.add(pane, animal.getPosition().x, map.getHeight() - animal.getPosition().y - 1);
+//        }
 
 //        grid.getRowConstraints().add(new RowConstraints(cellSize));
 //
@@ -216,7 +211,7 @@ public class App extends Application implements IGuiObserver {
 //                grid.add(pane, i, map.getHeight() - j);
 //            }
 //        }
-    }
+//    }
 
     @Override
     public void newDay(AbstractWorldMap map) {

@@ -1,7 +1,6 @@
 package agh.ics.ooproject1;
 
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
@@ -14,8 +13,9 @@ public class Animal implements IWorldMapElement {
     private int energy;
     private AbstractWorldMap map;
     private List<IPositionChangeObserver> observers = new ArrayList<>();
+    private int epochBorn;
 
-    public Animal(Vector2d position, AbstractWorldMap map, Genome genome, int energy) {
+    public Animal(Vector2d position, AbstractWorldMap map, Genome genome, int energy, int epoch) {
         this.position = position;
         int orientationIndex = (int) (Math.random() * 8);
         orientation = switch (orientationIndex) {
@@ -32,6 +32,7 @@ public class Animal implements IWorldMapElement {
         this.genome = genome;
         this.energy = energy;
         this.map = map;
+        epochBorn = epoch;
     }
 
     public void move() {
@@ -120,7 +121,7 @@ public class Animal implements IWorldMapElement {
         return energy;
     }
 
-    public List<Integer> getGenome() {
+    public List<Integer> getGenes() {
         return genome.getGenes();
     }
 
@@ -157,6 +158,10 @@ public class Animal implements IWorldMapElement {
         }
 
         return shape;
+    }
+
+    public int getEpochBorn() {
+        return epochBorn;
     }
 
     @Override

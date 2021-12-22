@@ -1,8 +1,6 @@
 package agh.ics.ooproject1;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class Genome {
     private List<Integer> genome;
@@ -18,6 +16,7 @@ public class Genome {
             int gene = (int)(Math.random() * 8);
             this.genome.add(gene);
         }
+        Collections.sort(this.genome);
     }
 
     public int randomMove() {
@@ -27,5 +26,22 @@ public class Genome {
 
     public List<Integer> getGenes() {
         return this.genome;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Genome genome1 = (Genome) o;
+        return Objects.equals(genome, genome1.genome);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(genome);
     }
 }

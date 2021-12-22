@@ -22,6 +22,7 @@ public class MapBox {
     private VBox mapAndButton;
     private Button startStop;
     private GridPane grid;
+    private Label mostCommonGenome;
 
     public MapBox(SimulationEngine engine, AbstractWorldMap map, Thread thread) {
         this.engine = engine;
@@ -35,11 +36,12 @@ public class MapBox {
         mapAndButton = new VBox(10);
         startStop = new Button("Start/stop");
         grid = new GridPane();
+        mostCommonGenome = new Label("Most common genome: " + this.map.mostCommonGenome);
+        statistics.getChildren().add(mostCommonGenome);
         makeGrid();
         mapAndButton.getChildren().addAll(grid, startStop);
         chartBox.getChildren().addAll(charts.getAllCharts());
         mapAndCharts.getChildren().addAll(chartBox, mapAndButton);
-        statistics.getChildren().add(new Label("Current animals: " + this.map.animalCount));
         wrapper.getChildren().addAll(mapAndCharts, statistics);
         startStop.setOnAction((event) -> {
             this.engine.flag = !this.engine.flag;
@@ -58,10 +60,11 @@ public class MapBox {
 
     public void refresh() {
         makeGrid();
-        charts.addDataToCharts(map.animalCount, map.grassCount);
+        charts.addDataToCharts(map.animalCount, map.grassCount, map.energyAvg, map.lifeSpanAvg);
     }
 
     public void makeGrid() {
+        mostCommonGenome.setText("Most common genome: " + map.mostCommonGenome);
         grid.getChildren().clear();
         grid.getColumnConstraints().clear();
         grid.getRowConstraints().clear();
