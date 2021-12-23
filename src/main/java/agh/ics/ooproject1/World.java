@@ -11,6 +11,10 @@ public class World {
 //        animal.move();
 //        System.out.println(animal.getPosition());
 //        System.out.println(animal.getOrientation());
-        Application.launch(App.class, args);
+        try {
+            Application.launch(App.class, args);
+        } catch (IllegalArgumentException ex) {
+            System.out.println(ex);
+        }
     }
 }

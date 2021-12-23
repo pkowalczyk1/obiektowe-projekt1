@@ -11,21 +11,24 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     protected List<Animal> animalsList = new ArrayList<>();
     protected Map<Vector2d, Grass> grassFields = new ConcurrentHashMap<>();
     protected List<Animal> toPlace = new CopyOnWriteArrayList<>();
-    protected Map<List<Integer>, Integer> genomesCount = new LinkedHashMap<>();
+    protected Map<Genome, Integer> genomesCount = new LinkedHashMap<>();
     protected int grassEnergy;
     public int moveEnergy;
     protected int startEnergy;
     protected int width;
     protected int height;
+    public boolean isMagic;
     protected Vector2d jungleLowerLeft;
     protected Vector2d jungleUpperRight;
     public int epoch = 1;
     public int animalCount = 0;
     public int grassCount = 0;
     public double energyAvg = startEnergy;
+    public double childrenAvg = 0;
     public double lifeSpanAvg = 0;
     public int deadAnimalsCount = 0;
-    public List<Integer> mostCommonGenome;
+    public Genome mostCommonGenome;
+    public Animal selectedAnimal = null;
 
     public List<Animal> animalsAt(Vector2d position) {
         return animals.get(position);
@@ -43,10 +46,6 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         return toPlace;
     }
 
-    public Map<Vector2d, Grass> getGrassFields() {
-        return grassFields;
-    }
-
     public List<Animal> getAnimalsList() {
         return animalsList;
     }
@@ -55,100 +54,106 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         return animalsAt(position) != null || grassAt(position) != null;
     }
 
-    public void placeJungleGrass() {
+    public Grass placeJungleGrass() {
         int jungleSize = (jungleUpperRight.x-jungleLowerLeft.x) * (jungleUpperRight.y-jungleLowerLeft.y);
         int tries = 0;
         boolean placed = false;
+        Grass newGrass = null;
         while (tries < jungleSize && !placed) {
             int x = (int) (Math.random()*(jungleUpperRight.x-jungleLowerLeft.x + 1) + jungleLowerLeft.x);
             int y = (int) (Math.random()*(jungleUpperRight.y-jungleLowerLeft.y + 1) + jungleLowerLeft.y);
             if (!isOccupied(new Vector2d(x, y))) {
-                place(new Grass(new Vector2d(x, y)));
+                newGrass = new Grass(new Vector2d(x, y));
+                placeGrass(newGrass);
                 placed = true;
             }
             tries++;
         }
+
+        return newGrass;
     }
 
-    public void placeNormalGrass() {
+    public Grass placeNormalGrass() {
         int mapSize = width * height;
         int tries = 0;
         boolean placed = false;
+        Grass newGrass = null;
         while (tries < mapSize && !placed) {
             int x = (int) (Math.random()*width);
             int y = (int) (Math.random()*height);
             if (!isOccupied(new Vector2d(x, y)) && !isJungle(new Vector2d(x, y))) {
-                place(new Grass(new Vector2d(x, y)));
+                newGrass = new Grass(new Vector2d(x, y));
+                placeGrass(newGrass);
                 placed = true;
             }
             tries++;
         }
+
+        return newGrass;
     }
 
     public boolean isJungle(Vector2d position) {
         return jungleLowerLeft.precedes(position) && jungleUpperRight.follows(position);
     }
 
-    public void place(IWorldMapElement element) {
-        if (element instanceof Grass) {
-            grassFields.put(element.getPosition(), (Grass) element);
-            grassCount++;
-        }
-        else if (element instanceof Animal) {
-            animalCount++;
-            if (genomesCount.get(((Animal) element).getGenes()) == null) {
-                genomesCount.put(((Animal) element).getGenes(), 1);
-            }
-            else {
-                int count = genomesCount.get(((Animal) element).getGenes());
-                genomesCount.put(((Animal) element).getGenes(), count + 1);
-            }
-            animalsList.add((Animal) element);
-            if (animals.get(element.getPosition()) == null) {
-                List<Animal> newList = new ArrayList<>();
-                newList.add((Animal) element);
-                animals.put(element.getPosition(), newList);
-                toPlace.add((Animal) element);
-            }
-            else {
-                List<Animal> list = animals.get(element.getPosition());
-                list.add((Animal) element);
-                list.sort(Comparator.comparingInt(Animal::getEnergy));
-                animals.put(element.getPosition(), list);
-                if (list.get(list.size() - 1) == element) {
-                    toPlace.add((Animal) element);
-                }
-            }
-
-            ((Animal) element).addObserver(this);
-        }
+    public void placeGrass(Grass grass) {
+        grassFields.put(grass.getPosition(), grass);
+        grassCount++;
     }
 
-    public void remove(IWorldMapElement element) {
-        if (element instanceof Grass) {
-            grassFields.remove(element.getPosition());
-            grassCount--;
+    public void placeAnimal(Animal animal) {
+        animalCount++;
+        if (genomesCount.get(animal.getGenome()) == null) {
+            genomesCount.put(animal.getGenome(), 1);
         }
-        else if (element instanceof Animal) {
-            animalCount--;
-            int count = genomesCount.get(((Animal) element).getGenes());
-            if (count == 1) {
-                genomesCount.remove(((Animal) element).getGenes());
+        else {
+            int count = genomesCount.get(animal.getGenome());
+            genomesCount.put(animal.getGenome(), count + 1);
+        }
+        animalsList.add(animal);
+        if (animals.get(animal.getPosition()) == null) {
+            List<Animal> newList = new ArrayList<>();
+            newList.add(animal);
+            animals.put(animal.getPosition(), newList);
+            toPlace.add(animal);
+        }
+        else {
+            List<Animal> list = animals.get(animal.getPosition());
+            list.add(animal);
+            list.sort(Comparator.comparingInt(Animal::getEnergy));
+            animals.put(animal.getPosition(), list);
+            if (list.get(list.size() - 1) == animal) {
+                toPlace.add(animal);
             }
-            else {
-                genomesCount.put(((Animal) element).getGenes(), count - 1);
-            }
-            animalsList.remove(element);
-            toPlace.remove(element);
-            List<Animal> animalsAtPos = animals.get(element.getPosition());
-            animalsAtPos.remove(element);
-            if (animalsAtPos.isEmpty()) {
-                animals.remove(element.getPosition());
-            }
-            else {
-                animals.put(element.getPosition(), animalsAtPos);
-                toPlace.add(animalsAtPos.get(animalsAtPos.size() - 1));
-            }
+        }
+
+        animal.addObserver(this);
+    }
+
+    public void removeGrass(Grass grass) {
+        grassFields.remove(grass.getPosition());
+        grassCount--;
+    }
+
+    public void removeAnimal(Animal animal) {
+        animalCount--;
+        int count = genomesCount.get(animal.getGenome());
+        if (count == 1) {
+            genomesCount.remove(animal.getGenome());
+        }
+        else {
+            genomesCount.put(animal.getGenome(), count - 1);
+        }
+        animalsList.remove(animal);
+        toPlace.remove(animal);
+        List<Animal> animalsAtPos = animals.get(animal.getPosition());
+        animalsAtPos.remove(animal);
+        if (animalsAtPos.isEmpty()) {
+            animals.remove(animal.getPosition());
+        }
+        else {
+            animals.put(animal.getPosition(), animalsAtPos);
+            toPlace.add(animalsAtPos.get(animalsAtPos.size() - 1));
         }
     }
 
@@ -200,7 +205,6 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
                 toDeletion.add(animal);
             }
         }
-//        System.out.println(toPlace);
 
         for (Animal animal : toPlace) {
             if (animal.getEnergy() <= 0) {
@@ -210,7 +214,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
 
         for (Animal animal : toDeletion) {
             animal.removeObserver(this);
-            remove(animal);
+            removeAnimal(animal);
         }
 
         for (Animal animal : toDeletionToPlace) {
@@ -218,7 +222,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
     }
 
-    public void eat() {
+    public List<Grass> eat() {
         List<Grass> toDeletion = new ArrayList<>();
         for (Grass grass : grassFields.values()) {
             List<Animal> animalsAtThisPos = animals.get(grass.getPosition());
@@ -227,38 +231,41 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
                 toDeletion.add(grass);
             }
             else if (animalsAtThisPos != null && animalsAtThisPos.size() > 1) {
-//                animalsAtThisPos.sort(Comparator.comparingInt(Animal::getEnergy));
                 int maxEnergy = animalsAtThisPos.get(animalsAtThisPos.size() - 1).getEnergy();
-                List<Animal> maxEnergyAnimals = animalsAtThisPos.stream().filter(o -> o.getEnergy() == maxEnergy).collect(Collectors.toList());
+                List<Animal> maxEnergyAnimals = animalsAtThisPos
+                        .stream()
+                        .filter(o -> o.getEnergy() == maxEnergy)
+                        .collect(Collectors.toList());
                 for (Animal animal : maxEnergyAnimals) {
                     animal.increaseEnergy(grassEnergy / maxEnergyAnimals.size());
                 }
-//                animalsAtThisPos.sort(Comparator.comparingInt(Animal::getEnergy));
-//                this.animals.put(grass.getPosition(), animalsAtThisPos);
                 toDeletion.add(grass);
             }
         }
 
         for (Grass grass : toDeletion) {
-            remove(grass);
+            removeGrass(grass);
         }
+
+        return toDeletion;
     }
 
     public void spawn() {
         List<Animal> toSpawn = new ArrayList<>();
         for (List<Animal> animalsAtThisPos : animals.values()) {
             if (animalsAtThisPos.size() > 1) {
-//                animalsAtThisPos.sort(Comparator.comparingInt(Animal::getEnergy));
                 Animal animal1 = animalsAtThisPos.get(animalsAtThisPos.size() - 1);
                 Animal animal2 = animalsAtThisPos.get(animalsAtThisPos.size() - 2);
                 if (animal1.getEnergy() >= startEnergy / 2 && animal2.getEnergy() >= startEnergy / 2) {
                     toSpawn.add(spawnNewAnimal(animal1, animal2));
+                    animal1.incrementChildren();
+                    animal2.incrementChildren();
                 }
             }
         }
 
         for (Animal animal : toSpawn) {
-            place(animal);
+            placeAnimal(animal);
         }
     }
 
@@ -272,13 +279,13 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         List<Integer> genomePart2;
 
         if (check == 1) {
-            genomePart1 = animal1.getGenes().subList(0, sliceIndex + 1);
-            genomePart2 = animal2.getGenes().subList(sliceIndex + 1, animal2.getGenes().size());
+            genomePart1 = animal1.getGenome().getGenes().subList(0, sliceIndex + 1);
+            genomePart2 = animal2.getGenome().getGenes().subList(sliceIndex + 1, animal2.getGenome().getGenes().size());
         }
         else {
             sliceIndex = 32 - sliceIndex;
-            genomePart1 = animal2.getGenes().subList(0, sliceIndex + 1);
-            genomePart2 = animal1.getGenes().subList(sliceIndex + 1, animal1.getGenes().size());
+            genomePart1 = animal2.getGenome().getGenes().subList(0, sliceIndex + 1);
+            genomePart2 = animal1.getGenome().getGenes().subList(sliceIndex + 1, animal1.getGenome().getGenes().size());
         }
         newGenome = Stream.concat(genomePart1.stream(), genomePart2.stream()).collect(Collectors.toList());
         Collections.sort(newGenome);
@@ -296,8 +303,17 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         return height;
     }
 
-    public void growGrass() {
-        placeNormalGrass();
-        placeJungleGrass();
+    public List<Grass> growGrass() {
+        Grass grass1 = placeNormalGrass();
+        Grass grass2 = placeJungleGrass();
+        List<Grass> toPlace = new ArrayList<>();
+        if (grass1 != null) {
+            toPlace.add(grass1);
+        }
+        if (grass2 != null) {
+            toPlace.add(grass2);
+        }
+
+        return toPlace;
     }
 }

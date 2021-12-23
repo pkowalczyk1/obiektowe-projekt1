@@ -8,6 +8,6 @@ public class Grass implements IWorldMapElement {
     }
 
     public Vector2d getPosition() {
-        return this.position;
+        return position;
     }
 }

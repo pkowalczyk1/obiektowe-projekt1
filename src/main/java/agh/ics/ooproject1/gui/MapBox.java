@@ -3,26 +3,30 @@ package agh.ics.ooproject1.gui;
 import agh.ics.ooproject1.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MapBox {
-    private AbstractWorldMap map;
-    private SimulationEngine engine;
-    private Thread thread;
-    private final int mapWidth = 500;
-    private VBox wrapper;
-    private Charts charts;
-    private HBox mapAndCharts;
-    private VBox statistics;
-    private VBox chartBox;
-    private VBox mapAndButton;
-    private Button startStop;
-    private GridPane grid;
-    private Label mostCommonGenome;
+    private final AbstractWorldMap map;
+    private final SimulationEngine engine;
+    private final Thread thread;
+    private final int mapWidth = 420;
+    private final VBox wrapper;
+    private final Charts charts;
+    private final HBox mapAndCharts;
+    private final VBox statistics;
+    private final VBox chartBox;
+    private final VBox mapAndButton;
+    private final Button startStop;
+    private final GridPane grid;
+    private final Label mostCommonGenome;
+    private final VBox oneAnimalStatistics;
+    private final Label magicWarning = new Label();
+    private final Map<Vector2d, Pane> placedGrass = new LinkedHashMap<>();
+    private final List<Pane> placedAnimals = new ArrayList<>();
 
     public MapBox(SimulationEngine engine, AbstractWorldMap map, Thread thread) {
         this.engine = engine;
@@ -36,10 +40,11 @@ public class MapBox {
         mapAndButton = new VBox(10);
         startStop = new Button("Start/stop");
         grid = new GridPane();
+        oneAnimalStatistics = new VBox(10);
         mostCommonGenome = new Label("Most common genome: " + this.map.mostCommonGenome);
         statistics.getChildren().add(mostCommonGenome);
-        makeGrid();
-        mapAndButton.getChildren().addAll(grid, startStop);
+        makeGrid(new ArrayList<>(), new ArrayList<>());
+        mapAndButton.getChildren().addAll(grid, startStop, oneAnimalStatistics);
         chartBox.getChildren().addAll(charts.getAllCharts());
         mapAndCharts.getChildren().addAll(chartBox, mapAndButton);
         wrapper.getChildren().addAll(mapAndCharts, statistics);
@@ -58,14 +63,15 @@ public class MapBox {
         return wrapper;
     }
 
-    public void refresh() {
-        makeGrid();
-        charts.addDataToCharts(map.animalCount, map.grassCount, map.energyAvg, map.lifeSpanAvg);
+    public void refresh(List<Grass> toPlace, List<Grass> toDeletion) {
+        makeGrid(toPlace, toDeletion);
+        charts.addDataToCharts(map.animalCount, map.grassCount, map.energyAvg, map.lifeSpanAvg, map.childrenAvg);
     }
 
-    public void makeGrid() {
+    public void makeGrid(List<Grass> newGrass, List<Grass> toDeletion) {
         mostCommonGenome.setText("Most common genome: " + map.mostCommonGenome);
-        grid.getChildren().clear();
+        grid.getChildren().removeAll(placedAnimals);
+        placedAnimals.clear();
         grid.getColumnConstraints().clear();
         grid.getRowConstraints().clear();
         double cellSize = Math.min(mapWidth/map.getWidth(), mapWidth/map.getHeight());
@@ -79,90 +85,42 @@ public class MapBox {
             grid.getRowConstraints().add(new RowConstraints(cellSize));
         }
 
-//        grid.add(new Label("test"), 0, 0);
+
+        for (Grass grass : toDeletion) {
+            Pane toRemove = placedGrass.get(grass.getPosition());
+            grid.getChildren().remove(toRemove);
+            placedGrass.remove(grass.getPosition());
+        }
 
         grid.setStyle("-fx-background-color: rgb(255, 153, 0)");
 
-        Map<Vector2d, Grass> grassMap = map.getGrassFields();
-        for (Grass grass : grassMap.values()) {
+        for (Grass grass : newGrass) {
             Pane pane = new StackPane();
             pane.setStyle("-fx-background-color: darkgreen");
             pane.setPrefSize(cellSize, cellSize);
             grid.add(pane, grass.getPosition().x, map.getHeight() - grass.getPosition().y - 1);
+            placedGrass.put(grass.getPosition(), pane);
         }
 
         List<Animal> toPlace = map.getToPlace();
         for (Animal animal : toPlace) {
             Pane pane = new StackPane();
+            pane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
+                showStatistics(animal);
+            });
             pane.setPrefSize(cellSize, cellSize);
             Rectangle shape = animal.getImage();
             shape.setWidth(cellSize);
             shape.setHeight(cellSize);
             pane.getChildren().add(shape);
             grid.add(pane, animal.getPosition().x, map.getHeight() - animal.getPosition().y - 1);
+            placedAnimals.add(pane);
         }
+    }
 
-//        grid.getRowConstraints().add(new RowConstraints(cellSize));
-//
-//        for (int i=0; i<map.getWidth(); i++) {
-//            Pane pane = new StackPane();
-//            pane.setStyle("-fx-background-color: rgb(255, 153, 0)");
-//            if (map.animalsAt(new Vector2d(i, 0)) != null) {
-//                List<Animal> list = map.animalsAt(new Vector2d(i, 0));
-//                list.sort(Comparator.comparingInt(Animal::getEnergy));
-//                Animal toShow = list.get(list.size() - 1);
-//                Rectangle image = toShow.getImage();
-//                image.setHeight(cellSize);
-//                image.setWidth(cellSize);
-//                pane.getChildren().add(image);
-//            }
-//            if (map.grassAt(new Vector2d(i, 0)) != null) {
-//                pane.setStyle("-fx-background-color: darkgreen");
-//            }
-//            pane.setPrefSize(cellSize, cellSize);
-//            grid.add(pane, i, 0);
-//            grid.getColumnConstraints().add(new ColumnConstraints(cellSize));
-//        }
-//
-//        for (int i=1; i<map.getHeight(); i++) {
-//            Pane pane = new StackPane();
-//            pane.setStyle("-fx-background-color: rgb(255, 153, 0)");
-//            if (map.animalsAt(new Vector2d(0, i)) != null) {
-//                List<Animal> list = map.animalsAt(new Vector2d(0, i));
-//                list.sort(Comparator.comparingInt(Animal::getEnergy));
-//                Animal toShow = list.get(list.size() - 1);
-//                Rectangle image = toShow.getImage();
-//                image.setHeight(cellSize);
-//                image.setWidth(cellSize);
-//                pane.getChildren().add(image);
-//            }
-//            if (map.grassAt(new Vector2d(0, i)) != null) {
-//                pane.setStyle("-fx-background-color: darkgreen");
-//            }
-//            pane.setPrefSize(cellSize, cellSize);
-//            grid.add(pane, 0, map.getHeight() - i);
-//            grid.getRowConstraints().add(new RowConstraints(cellSize));
-//        }
-//
-//        for (int i=1; i<map.getWidth(); i++) {
-//            for (int j=1; j<map.getHeight(); j++) {
-//                Pane pane = new StackPane();
-//                pane.setStyle("-fx-background-color: rgb(255, 153, 0)");
-//                if (map.animalsAt(new Vector2d(i, j)) != null) {
-//                    List<Animal> list = map.animalsAt(new Vector2d(i, j));
-//                    list.sort(Comparator.comparingInt(Animal::getEnergy));
-//                    Animal toShow = list.get(list.size() - 1);
-//                    Rectangle image = toShow.getImage();
-//                    image.setHeight(cellSize);
-//                    image.setWidth(cellSize);
-//                    pane.getChildren().add(image);
-//                }
-//                if (map.grassAt(new Vector2d(i, j)) != null) {
-//                    pane.setStyle("-fx-background-color: darkgreen");
-//                }
-//                pane.setPrefSize(cellSize, cellSize);
-//                grid.add(pane, i, map.getHeight() - j);
-//            }
-//        }
+    public void showStatistics(Animal animal) {
+        oneAnimalStatistics.getChildren().clear();
+        Label genome = new Label("Chosen animal genome: " + animal.getGenome());
+        oneAnimalStatistics.getChildren().add(genome);
     }
 }

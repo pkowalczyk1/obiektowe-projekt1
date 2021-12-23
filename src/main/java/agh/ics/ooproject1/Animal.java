@@ -9,11 +9,12 @@ import java.util.List;
 public class Animal implements IWorldMapElement {
     private Vector2d position;
     private MapDirection orientation;
-    private Genome genome;
+    private final Genome genome;
     private int energy;
-    private AbstractWorldMap map;
-    private List<IPositionChangeObserver> observers = new ArrayList<>();
-    private int epochBorn;
+    private final AbstractWorldMap map;
+    private final List<IPositionChangeObserver> observers = new ArrayList<>();
+    private final int epochBorn;
+    private int children = 0;
 
     public Animal(Vector2d position, AbstractWorldMap map, Genome genome, int energy, int epoch) {
         this.position = position;
@@ -121,8 +122,8 @@ public class Animal implements IWorldMapElement {
         return energy;
     }
 
-    public List<Integer> getGenes() {
-        return genome.getGenes();
+    public Genome getGenome() {
+        return genome;
     }
 
     public void decreaseEnergy(int change) {
@@ -162,6 +163,14 @@ public class Animal implements IWorldMapElement {
 
     public int getEpochBorn() {
         return epochBorn;
+    }
+
+    public int getChildren() {
+        return children;
+    }
+
+    public void incrementChildren() {
+        children++;
     }
 
     @Override
