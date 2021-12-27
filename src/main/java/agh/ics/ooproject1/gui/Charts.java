@@ -7,6 +7,7 @@ import javafx.scene.chart.XYChart;
 import java.util.ArrayList;
 import java.util.List;
 
+//class that contains all charts displayed in gui
 public class Charts {
     private final LineChart<Number, Number> animalsAndGrassChart;
     private final LineChart<Number, Number> energyAvgChart;
@@ -20,6 +21,7 @@ public class Charts {
     private int day = 0;
 
     public Charts() {
+        //create charts and series
         animalsAndGrassChart = new LineChart<>(new NumberAxis(), new NumberAxis());
         energyAvgChart = new LineChart<>(new NumberAxis(), new NumberAxis());
         lifespanAvgChart = new LineChart<>(new NumberAxis(), new NumberAxis());
@@ -46,6 +48,7 @@ public class Charts {
         lifespanAvgChart.setCreateSymbols(false);
     }
 
+    //method to add new points to charts
     public void addDataToCharts(int newAnimalCount, int newGrassCount, double newEnergyAvg, double newLifespanAvg, double newChildrenAvg){
         day++;
         animalSeries.getData().add(new XYChart.Data<>(day, newAnimalCount));
@@ -55,6 +58,7 @@ public class Charts {
         childrenAvgSeries.getData().add(new XYChart.Data<>(day, newChildrenAvg));
     }
 
+    //getter for list with all charts
     public List<LineChart> getAllCharts() {
         return allCharts;
     }

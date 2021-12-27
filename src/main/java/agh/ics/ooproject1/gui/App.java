@@ -14,8 +14,7 @@ import java.util.List;
 public class App extends Application implements IGuiObserver {
     private AbstractWorldMap map1, map2;
     private SimulationEngine engine1, engine2;
-    private MapBox mapBoxLeft;
-    private MapBox mapBoxRight;
+    private MapBox mapBoxLeft, mapBoxRight;
     private final int sceneWidth = 1000;
     private final int sceneHeight = 800;
 
@@ -25,6 +24,7 @@ public class App extends Application implements IGuiObserver {
 
         VBox main = new VBox(menu.getWrapper());
 
+        //menu submit button action; simulation configuration
         menu.submit.setOnAction(event -> {
             int width = menu.getWidth();
             int height = menu.getHeight();
@@ -49,8 +49,8 @@ public class App extends Application implements IGuiObserver {
             Thread thread1 = new Thread(engine1);
             Thread thread2 = new Thread(engine2);
 
-            mapBoxLeft = new MapBox(engine1, map1, thread1);
-            mapBoxRight = new MapBox(engine2, map2, thread2);
+            mapBoxLeft = new MapBox(engine1, map1);
+            mapBoxRight = new MapBox(engine2, map2);
             HBox maps = new HBox(mapBoxLeft.getWrapper(), mapBoxRight.getWrapper());
             maps.setAlignment(Pos.CENTER);
             main.getChildren().addAll(maps);
@@ -58,11 +58,11 @@ public class App extends Application implements IGuiObserver {
             thread1.start();
             thread2.start();
 
-            primaryStage.setOnCloseRequest((e) -> {
+            primaryStage.setOnCloseRequest((event1) -> {
+                engine1.flag = true;
+                engine2.flag = true;
                 engine1.isGoing = false;
                 engine2.isGoing = false;
-                thread1.resume();
-                thread2.resume();
             });
         });
 
@@ -75,6 +75,7 @@ public class App extends Application implements IGuiObserver {
         primaryStage.show();
     }
 
+    //method to update gui on each day of simulation, separately for each map
     @Override
     public void newDay(AbstractWorldMap map, List<Grass> toPlace, List<Grass> toDeletion, boolean magic) {
         Platform.runLater(() -> {

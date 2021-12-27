@@ -4,6 +4,7 @@ public class BoundedMap extends AbstractWorldMap {
     public BoundedMap(int width, int height, double jungleRatio, int grassEnergy, int moveEnergy, int startEnergy, boolean isMagic) {
         this.width = width;
         this.height = height;
+        jungleRatio = Math.sqrt(jungleRatio);
         this.jungleLowerLeft = new Vector2d((int)(width * (1-jungleRatio)/2), (int)(height * (1-jungleRatio)/2));
         this.jungleUpperRight = new Vector2d((int)(width * (1+jungleRatio)/2), (int)(height * (1+jungleRatio)/2));
         this.grassEnergy = grassEnergy;

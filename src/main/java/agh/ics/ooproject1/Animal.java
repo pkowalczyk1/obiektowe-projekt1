@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Animal implements IWorldMapElement {
+    //animal parameters
     private Vector2d position;
     private MapDirection orientation;
     private final Genome genome;
@@ -14,8 +15,12 @@ public class Animal implements IWorldMapElement {
     private final AbstractWorldMap map;
     private final List<IPositionChangeObserver> observers = new ArrayList<>();
     private final int epochBorn;
+
+    //variables for statistics
     private int children = 0;
     private int descendants = 0;
+
+    //variables for tracking
     public boolean isSelectedDescendant = false;
     private int epochDied = -1;
     private int trackedChildren = 0;
@@ -40,8 +45,7 @@ public class Animal implements IWorldMapElement {
         epochBorn = epoch;
     }
 
-    public void move() {
-        int moveIndex = genome.randomMove();
+    public void move(int moveIndex) {
         switch (moveIndex) {
             case 0 -> {
                 Vector2d oldPosition = position;
@@ -49,6 +53,7 @@ public class Animal implements IWorldMapElement {
                 if (map.canMoveTo(position)) {
                     int x = position.x;
                     int y = position.y;
+                    //change position in unbounded map
                     if (position.x < 0) {
                         x += map.getWidth();
                     } else if (position.x >= map.getWidth()) {
@@ -70,14 +75,17 @@ public class Animal implements IWorldMapElement {
             case 1 -> {
                 orientation = orientation.next();
                 decreaseEnergy(map.moveEnergy);
+                map.energyChanged(this);
             }
             case 2 -> {
                 orientation = orientation.next().next();
                 decreaseEnergy(map.moveEnergy);
+                map.energyChanged(this);
             }
             case 3 -> {
                 orientation = orientation.next().next().next();
                 decreaseEnergy(map.moveEnergy);
+                map.energyChanged(this);
             }
             case 4 -> {
                 Vector2d oldPosition = position;
@@ -85,6 +93,7 @@ public class Animal implements IWorldMapElement {
                 if (map.canMoveTo(position)) {
                     int x = position.x;
                     int y = position.y;
+                    //change position in unbounded map
                     if (position.x < 0) {
                         x += map.getWidth();
                     } else if (position.x >= map.getWidth()) {
@@ -106,20 +115,28 @@ public class Animal implements IWorldMapElement {
             case 5 -> {
                 orientation = orientation.previous().previous().previous();
                 decreaseEnergy(map.moveEnergy);
+                map.energyChanged(this);
             }
             case 6 -> {
                 orientation = orientation.previous().previous();
                 decreaseEnergy(map.moveEnergy);
+                map.energyChanged(this);
             }
             case 7 -> {
                 orientation = orientation.previous();
                 decreaseEnergy(map.moveEnergy);
+                map.energyChanged(this);
             }
         }
     }
 
+    //getters
     public Vector2d getPosition() {
         return position;
+    }
+
+    public MapDirection getOrientation() {
+        return orientation;
     }
 
     public int getEnergy() {
@@ -130,6 +147,27 @@ public class Animal implements IWorldMapElement {
         return genome;
     }
 
+    public int getEpochBorn() {
+        return epochBorn;
+    }
+
+    public int getEpochDied() {
+        return epochDied;
+    }
+
+    public int getChildren() {
+        return children;
+    }
+
+    public int getDescendants() {
+        return descendants;
+    }
+
+    public int getTrackedChildren() {
+        return trackedChildren;
+    }
+
+    //other methods
     public void decreaseEnergy(int change) {
         energy -= change;
     }
@@ -163,26 +201,6 @@ public class Animal implements IWorldMapElement {
         }
 
         return shape;
-    }
-
-    public int getEpochBorn() {
-        return epochBorn;
-    }
-
-    public int getEpochDied() {
-        return epochDied;
-    }
-
-    public int getChildren() {
-        return children;
-    }
-
-    public int getDescendants() {
-        return descendants;
-    }
-
-    public int getTrackedChildren() {
-        return trackedChildren;
     }
 
     public void incrementChildren() {

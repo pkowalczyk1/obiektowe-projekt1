@@ -5,11 +5,13 @@ import java.util.*;
 public class Genome {
     private final List<Integer> genome;
 
+    //constructor with genome as parameter
     public Genome(List<Integer> genome) {
         genome.sort(Comparator.comparingInt(o -> o));
         this.genome = genome;
     }
 
+    //constructor with random genome
     public Genome() {
         genome = new ArrayList<>();
         for (int i=0; i<32; i++) {

@@ -2,8 +2,6 @@ package agh.ics.ooproject1;
 
 import java.util.Objects;
 
-import static java.lang.Math.*;
-
 public class Vector2d {
     public final int x;
     public final int y;
@@ -23,14 +21,6 @@ public class Vector2d {
 
     public boolean follows(Vector2d other) {
         return x >= other.x && y >= other.y;
-    }
-
-    public Vector2d upperRight(Vector2d other) {
-        return new Vector2d(max(x, other.x), max(y, other.y));
-    }
-
-    public Vector2d lowerLeft(Vector2d other) {
-        return new Vector2d(min(x, other.x), min(y, other.y));
     }
 
     public Vector2d add(Vector2d other) {

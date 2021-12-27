@@ -27,7 +27,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     protected Vector2d jungleUpperRight;
 
     //statistics
-    public int epoch = 1;
+    public int epoch = 0;
     public int animalCount = 0;
     public int grassCount = 0;
     public double energyAvg = startEnergy;
@@ -36,6 +36,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     public int deadAnimalsCount = 0;
     protected Map<Genome, Integer> genomesCount = new LinkedHashMap<>();
     private final List<String> statisticsHist = new ArrayList<>();
+    private final List<Double> statisticsAverage = Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0);
     public Genome mostCommonGenome;
 
     //variables for tracking animal
@@ -72,7 +73,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         boolean placed = false;
         Grass newGrass = null;
         //try random position for new grass (jungleSize) times, if not found, don't place since
-        //map is almost full
+        //jungle is almost full
         while (tries < jungleSize && !placed) {
             int x = (int) (Math.random()*(jungleUpperRight.x-jungleLowerLeft.x + 1) + jungleLowerLeft.x);
             int y = (int) (Math.random()*(jungleUpperRight.y-jungleLowerLeft.y + 1) + jungleLowerLeft.y);
@@ -176,6 +177,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
 
     @Override
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, Animal animal) {
+        //remove from old position
         List<Animal> list = animals.get(oldPosition);
         toPlace.remove(animal);
         if (list.indexOf(animal) == list.size() - 1 && list.size() != 1) {
@@ -189,6 +191,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
             animals.put(oldPosition, list);
         }
 
+        //add to new position
         list = this.animals.get(newPosition);
         if (list == null) {
             List<Animal> newList = new ArrayList<>();
@@ -206,9 +209,15 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
     }
 
+    public void energyChanged(Animal animal) {
+        List<Animal> list = animals.get(animal.getPosition());
+        list.sort(Comparator.comparingInt(Animal::getEnergy));
+        animals.put(animal.getPosition(), list);
+    }
+
     public void moveAllAnimals() {
         for (Animal animal : animalsList) {
-            animal.move();
+            animal.move(animal.getGenome().randomMove());
         }
     }
 
@@ -240,6 +249,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
     }
 
+    //returns list of grass to remove from gui
     public List<Grass> eat() {
         List<Grass> toDeletion = new ArrayList<>();
         for (Grass grass : grassFields.values()) {
@@ -287,7 +297,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
     }
 
-    private Animal spawnNewAnimal(Animal animal1, Animal animal2) {
+    public Animal spawnNewAnimal(Animal animal1, Animal animal2) {
         int energy1 = animal1.getEnergy() / 4;
         int energy2 = animal2.getEnergy() / 4;
         int sliceIndex = (int) ((double) animal1.getEnergy() / (animal1.getEnergy() + animal2.getEnergy()) * 32);
@@ -311,12 +321,15 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         animal1.decreaseEnergy(energy1);
         animal2.decreaseEnergy(energy2);
         Animal newAnimal = new Animal(animal1.getPosition(), this, new Genome(newGenome), energy1 + energy2, epoch);
+
+        //increment selected animal descendant counter and mark new animal as selected descendant
         if (selectedAnimal != null && ((animal1.isSelectedDescendant && animal1.getEpochBorn() > trackStartTime)
                 || (animal2.isSelectedDescendant && animal2.getEpochBorn() > trackStartTime))) {
             selectedAnimal.incrementDescendants();
             newAnimal.isSelectedDescendant = true;
         }
 
+        //increment selected animal children and descendant counter and mark new animal as selected descendant
         if (animal1 == selectedAnimal || animal2 == selectedAnimal) {
             selectedAnimal.incrementDescendants();
             selectedAnimal.incrementTrackedChildren();
@@ -334,6 +347,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         return height;
     }
 
+    //returns list of new grass to show in gui
     public List<Grass> growGrass() {
         Grass grass1 = placeNormalGrass();
         Grass grass2 = placeJungleGrass();
@@ -349,8 +363,21 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     }
 
     public void updateStatisticsHist() {
+        //add new entry to statistics history list
         String newStat = epoch + "," + animalCount + "," + grassCount + "," + energyAvg + "," + lifeSpanAvg + "," + childrenAvg;
         statisticsHist.add(newStat);
+
+        double animalCountAvg = statisticsAverage.get(0);
+        double grassCountAvg = statisticsAverage.get(1);
+        double energyAvgAvg = statisticsAverage.get(2);
+        double lifespanAvgAvg = statisticsAverage.get(3);
+        double childrenAvgAvg = statisticsAverage.get(4);
+
+        statisticsAverage.set(0, (animalCountAvg*epoch + animalCount) / (epoch + 1));
+        statisticsAverage.set(1, (grassCountAvg*epoch + grassCount) / (epoch + 1));
+        statisticsAverage.set(2, (energyAvgAvg*epoch + energyAvg) / (epoch + 1));
+        statisticsAverage.set(3, (lifespanAvgAvg*epoch + lifeSpanAvg) / (epoch + 1));
+        statisticsAverage.set(4, (childrenAvgAvg*epoch + childrenAvg) / (epoch + 1));
     }
 
     public void saveLogs(String fileName) {
@@ -358,6 +385,9 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         try (PrintWriter pw = new PrintWriter(outputFile)) {
             pw.println("epoch,animalCount,grassCount,energyAvg,lifespanAvg,childrenAvg");
             statisticsHist.forEach(pw::println);
+            List<String> averageStrings =  statisticsAverage.stream().map(Object::toString).collect(Collectors.toList());
+            String average = "averages," + String.join(",", averageStrings);
+            pw.println(average);
         } catch (FileNotFoundException e) {
             System.out.println("Cannot create file, didn't save");
             e.printStackTrace();

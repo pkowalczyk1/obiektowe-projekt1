@@ -36,47 +36,52 @@ public class SimulationEngine implements Runnable {
     @Override
     public void run() {
         while (isGoing) {
-            spawnedMagic = false;
-            map.removeDeadAnimals();
-            map.moveAllAnimals();
-            List<Grass> toDeletion = map.eat();
-            map.spawn();
-            List<Grass> toPlace = map.growGrass();
+            if (flag) {
+                spawnedMagic = false;
+                //simulation methods
+                map.removeDeadAnimals();
+                map.moveAllAnimals();
+                List<Grass> toDeletion = map.eat();
+                map.spawn();
+                List<Grass> toPlace = map.growGrass();
 
-            if (map.animalCount == 0) {
-                map.energyAvg = 0;
-                map.childrenAvg = 0;
-            }
-            else {
-                map.energyAvg = map.getAnimalsList().stream()
-                        .filter(o -> o.getEnergy() > 0)
-                        .mapToDouble(Animal::getEnergy).sum() / map.animalCount;
-                map.childrenAvg = map.getAnimalsList().stream()
-                        .filter(o -> o.getEnergy() > 0)
-                        .mapToDouble(Animal::getChildren).sum() / map.animalCount;
-            }
-
-            int maxCount = -1;
-            Genome maxGenome = null;
-            for (Map.Entry<Genome, Integer> entry : map.genomesCount.entrySet()) {
-                if (entry.getValue() > maxCount) {
-                    maxCount = entry.getValue();
-                    maxGenome = entry.getKey();
+                //update statistics
+                if (map.animalCount == 0) {
+                    map.energyAvg = 0;
+                    map.childrenAvg = 0;
                 }
+                else {
+                    map.energyAvg = map.getAnimalsList().stream()
+                            .filter(o -> o.getEnergy() > 0)
+                            .mapToDouble(Animal::getEnergy).sum() / map.animalCount;
+                    map.childrenAvg = map.getAnimalsList().stream()
+                            .filter(o -> o.getEnergy() > 0)
+                            .mapToDouble(Animal::getChildren).sum() / map.animalCount;
+                }
+
+                int maxCount = -1;
+                Genome maxGenome = null;
+                for (Map.Entry<Genome, Integer> entry : map.genomesCount.entrySet()) {
+                    if (entry.getValue() > maxCount) {
+                        maxCount = entry.getValue();
+                        maxGenome = entry.getKey();
+                    }
+                }
+                map.mostCommonGenome = maxGenome;
+
+                //check if 5 new animals should be spawned in magic strategy
+                if (map.animalCount == 5 && map.isMagic && magicCount < 3) {
+                    place5New();
+                    magicCount++;
+                    spawnedMagic = true;
+                }
+
+                map.updateStatisticsHist();
+                map.epoch++;
+
+                //warn gui about new day
+                gui.newDay(map, toPlace, toDeletion, spawnedMagic);
             }
-            map.mostCommonGenome = maxGenome;
-
-            if (map.animalCount == 5 && map.isMagic && magicCount < 3) {
-                place5New();
-                magicCount++;
-                spawnedMagic = true;
-            }
-
-            map.updateStatisticsHist();
-            map.epoch++;
-
-            gui.newDay(map, toPlace, toDeletion, spawnedMagic);
-
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

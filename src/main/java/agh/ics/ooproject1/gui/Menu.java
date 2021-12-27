@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
+//class that contains menu text fields and labels
 public class Menu {
     private final VBox wrapper;
     private final Label widthLabel;
@@ -64,6 +65,7 @@ public class Menu {
         wrapper.setAlignment(Pos.CENTER);
     }
 
+    //getters for values in text fields with validation and exception throwing when invalid values are given
     public int getWidth() throws IllegalArgumentException {
         if (!isNumeric(widthText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
@@ -133,10 +135,12 @@ public class Menu {
         return rightMapStrategy.isSelected();
     }
 
+    //getter for entire menu
     public VBox getWrapper() {
         return wrapper;
     }
 
+    //method to check if string is numeric
     private boolean isNumeric(String strNum) {
         if (strNum == null) {
             return false;
