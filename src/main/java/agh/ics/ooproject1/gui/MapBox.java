@@ -67,6 +67,7 @@ public class MapBox {
         wrapper.getChildren().addAll(mapAndCharts, statistics);
 
         startStop.setOnAction((event) -> {
+            oneAnimalClicked.getChildren().clear();
             this.engine.flag = !this.engine.flag;
             if (this.engine.flag) {
                 buttons.getChildren().removeAll(showMostCommonGenome, saveLogs);
