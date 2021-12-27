@@ -24,46 +24,50 @@ public class App extends Application implements IGuiObserver {
 
         VBox main = new VBox(menu.getWrapper());
 
-        //menu submit button action; simulation configuration
+        //menu submit button action; simulation configuration; argument exception catch
         menu.submit.setOnAction(event -> {
-            int width = menu.getWidth();
-            int height = menu.getHeight();
-            int startEnergy = menu.getStartEnergy();
-            int moveCost = menu.getMoveCost();
-            int plantEnergy = menu.getPlantEnergy();
-            double jungleRatio = menu.getJungleRatio();
-            int animalCount = menu.getAnimalCount();
+            try {
+                int width = menu.getWidth();
+                int height = menu.getHeight();
+                int startEnergy = menu.getStartEnergy();
+                int moveCost = menu.getMoveCost();
+                int plantEnergy = menu.getPlantEnergy();
+                double jungleRatio = menu.getJungleRatio();
+                int animalCount = menu.getAnimalCount();
 
-            boolean leftMapStrategy = menu.getLeftMapStrategy();
-            boolean rightMapStrategy = menu.getRightMapStrategy();
+                boolean leftMapStrategy = menu.getLeftMapStrategy();
+                boolean rightMapStrategy = menu.getRightMapStrategy();
 
-            this.map1 = new UnboundedMap(width, height, jungleRatio, plantEnergy, moveCost, startEnergy, leftMapStrategy);
-            this.map2 = new BoundedMap(width, height, jungleRatio, plantEnergy, moveCost, startEnergy, rightMapStrategy);
+                this.map1 = new UnboundedMap(width, height, jungleRatio, plantEnergy, moveCost, startEnergy, leftMapStrategy);
+                this.map2 = new BoundedMap(width, height, jungleRatio, plantEnergy, moveCost, startEnergy, rightMapStrategy);
 
-            this.engine1 = new SimulationEngine(map1, animalCount, this);
-            this.engine2 = new SimulationEngine(map2, animalCount, this);
+                this.engine1 = new SimulationEngine(map1, animalCount, this);
+                this.engine2 = new SimulationEngine(map2, animalCount, this);
 
-            main.getChildren().clear();
-            main.setAlignment(Pos.CENTER);
+                main.getChildren().clear();
+                main.setAlignment(Pos.CENTER);
 
-            Thread thread1 = new Thread(engine1);
-            Thread thread2 = new Thread(engine2);
+                Thread thread1 = new Thread(engine1);
+                Thread thread2 = new Thread(engine2);
 
-            mapBoxLeft = new MapBox(engine1, map1);
-            mapBoxRight = new MapBox(engine2, map2);
-            HBox maps = new HBox(mapBoxLeft.getWrapper(), mapBoxRight.getWrapper());
-            maps.setAlignment(Pos.CENTER);
-            main.getChildren().addAll(maps);
+                mapBoxLeft = new MapBox(engine1, map1);
+                mapBoxRight = new MapBox(engine2, map2);
+                HBox maps = new HBox(mapBoxLeft.getWrapper(), mapBoxRight.getWrapper());
+                maps.setAlignment(Pos.CENTER);
+                main.getChildren().addAll(maps);
 
-            thread1.start();
-            thread2.start();
-
-            primaryStage.setOnCloseRequest((event1) -> {
-                engine1.flag = true;
-                engine2.flag = true;
-                engine1.isGoing = false;
-                engine2.isGoing = false;
-            });
+                thread1.start();
+                thread2.start();
+                primaryStage.setOnCloseRequest((event1) -> {
+                    engine1.flag = true;
+                    engine2.flag = true;
+                    engine1.isGoing = false;
+                    engine2.isGoing = false;
+                });
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+                System.exit(1);
+            }
         });
 
         main.setPrefWidth(800);

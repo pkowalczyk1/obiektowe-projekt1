@@ -70,8 +70,8 @@ public class Menu {
         if (!isNumeric(widthText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
-        if (Integer.parseInt(widthText.getText()) > 200) {
-            throw new IllegalArgumentException("Too wide map");
+        if (Integer.parseInt(widthText.getText()) > 200 || Integer.parseInt(widthText.getText()) < 0) {
+            throw new IllegalArgumentException("Map width can neither be greater than 200 nor negative");
         }
         return Integer.parseInt(widthText.getText());
     }
@@ -80,8 +80,8 @@ public class Menu {
         if (!isNumeric(heightText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
-        if (Integer.parseInt(heightText.getText()) > 200) {
-            throw new IllegalArgumentException("Too high map");
+        if (Integer.parseInt(heightText.getText()) > 200 || Integer.parseInt(heightText.getText()) < 0) {
+            throw new IllegalArgumentException("Map height can neither be greater than 200 nor negative");
         }
         return Integer.parseInt(heightText.getText());
     }
@@ -90,12 +90,18 @@ public class Menu {
         if (!isNumeric(startEnergyText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
+        if (Integer.parseInt(startEnergyText.getText()) < 0) {
+            throw new IllegalArgumentException("Start energy cannot be negative");
+        }
         return Integer.parseInt(startEnergyText.getText());
     }
 
     public int getMoveCost() throws IllegalArgumentException {
         if (!isNumeric(moveCostText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
+        }
+        if (Integer.parseInt(moveCostText.getText()) < 0) {
+            throw new IllegalArgumentException("Move cost cannot be negative");
         }
         return Integer.parseInt(moveCostText.getText());
     }
@@ -104,6 +110,9 @@ public class Menu {
         if (!isNumeric(plantEnergyText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
+        if (Integer.parseInt(plantEnergyText.getText()) < 0) {
+            throw new IllegalArgumentException("Plant energy cannot be negative");
+        }
         return Integer.parseInt(plantEnergyText.getText());
     }
 
@@ -111,8 +120,8 @@ public class Menu {
         if (!isNumeric(jungleRatioText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
-        if (Double.parseDouble(jungleRatioText.getText()) > 1) {
-            throw new IllegalArgumentException("Jungle ratio cannot be greater than 1");
+        if (Double.parseDouble(jungleRatioText.getText()) < 0 || Double.parseDouble(jungleRatioText.getText()) > 1) {
+            throw new IllegalArgumentException("Jungle ratio can neither be greater than 1 not negative");
         }
         return Double.parseDouble(jungleRatioText.getText());
     }
@@ -121,8 +130,8 @@ public class Menu {
         if (!isNumeric(animalCountText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
-        if (Integer.parseInt(animalCountText.getText()) > Integer.parseInt(widthText.getText())*Integer.parseInt(heightText.getText())) {
-            throw new IllegalArgumentException("Animal count cannot be greater than map size");
+        if (Integer.parseInt(animalCountText.getText()) < 0 || Integer.parseInt(animalCountText.getText()) > Integer.parseInt(widthText.getText())*Integer.parseInt(heightText.getText())) {
+            throw new IllegalArgumentException("Animal count can neither be greater than map size nor negative");
         }
         return Integer.parseInt(animalCountText.getText());
     }
