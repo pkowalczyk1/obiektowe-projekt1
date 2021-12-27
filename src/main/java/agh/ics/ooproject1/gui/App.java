@@ -15,7 +15,7 @@ public class App extends Application implements IGuiObserver {
     private AbstractWorldMap map1, map2;
     private SimulationEngine engine1, engine2;
     private MapBox mapBoxLeft, mapBoxRight;
-    private final int sceneWidth = 1000;
+    private final int sceneWidth = 1500;
     private final int sceneHeight = 800;
 
     @Override

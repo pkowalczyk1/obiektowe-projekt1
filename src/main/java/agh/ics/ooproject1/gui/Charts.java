@@ -48,14 +48,14 @@ public class Charts {
         lifespanAvgChart.setCreateSymbols(false);
     }
 
-    //method to add new points to charts
+    //method to add new points to charts; statistics added to chart come from end of every day of simulation
     public void addDataToCharts(int newAnimalCount, int newGrassCount, double newEnergyAvg, double newLifespanAvg, double newChildrenAvg){
-        day++;
         animalSeries.getData().add(new XYChart.Data<>(day, newAnimalCount));
         grassSeries.getData().add(new XYChart.Data<>(day, newGrassCount));
         energyAvgSeries.getData().add(new XYChart.Data<>(day, newEnergyAvg));
         lifespanAvgSeries.getData().add(new XYChart.Data<>(day, newLifespanAvg));
         childrenAvgSeries.getData().add(new XYChart.Data<>(day, newChildrenAvg));
+        day++;
     }
 
     //getter for list with all charts
