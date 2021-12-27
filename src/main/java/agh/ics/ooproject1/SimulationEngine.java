@@ -9,6 +9,7 @@ import java.util.Map;
 public class SimulationEngine implements Runnable {
     private final AbstractWorldMap map;
     private final IGuiObserver gui;
+    public boolean isGoing = true;
     public boolean flag = true;
     public int magicCount = 0;
     private boolean spawnedMagic = false;
@@ -34,7 +35,7 @@ public class SimulationEngine implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (isGoing) {
             spawnedMagic = false;
             map.removeDeadAnimals();
             map.moveAllAnimals();
@@ -42,14 +43,17 @@ public class SimulationEngine implements Runnable {
             map.spawn();
             List<Grass> toPlace = map.growGrass();
 
-            map.epoch++;
             if (map.animalCount == 0) {
                 map.energyAvg = 0;
                 map.childrenAvg = 0;
             }
             else {
-                map.energyAvg = map.getAnimalsList().stream().mapToDouble(Animal::getEnergy).sum() / map.animalCount;
-                map.childrenAvg = map.getAnimalsList().stream().mapToDouble(Animal::getChildren).sum() / map.animalCount;
+                map.energyAvg = map.getAnimalsList().stream()
+                        .filter(o -> o.getEnergy() > 0)
+                        .mapToDouble(Animal::getEnergy).sum() / map.animalCount;
+                map.childrenAvg = map.getAnimalsList().stream()
+                        .filter(o -> o.getEnergy() > 0)
+                        .mapToDouble(Animal::getChildren).sum() / map.animalCount;
             }
 
             int maxCount = -1;
@@ -68,10 +72,13 @@ public class SimulationEngine implements Runnable {
                 spawnedMagic = true;
             }
 
+            map.updateStatisticsHist();
+            map.epoch++;
+
             gui.newDay(map, toPlace, toDeletion, spawnedMagic);
 
             try {
-                Thread.sleep(200);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

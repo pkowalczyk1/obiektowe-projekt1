@@ -1,5 +1,8 @@
 package agh.ics.ooproject1;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -7,11 +10,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 abstract public class AbstractWorldMap implements IPositionChangeObserver{
+    //lists and maps for animals and grass
     protected Map<Vector2d, List<Animal>> animals = new LinkedHashMap<>();
     protected List<Animal> animalsList = new ArrayList<>();
     protected Map<Vector2d, Grass> grassFields = new ConcurrentHashMap<>();
     protected List<Animal> toPlace = new CopyOnWriteArrayList<>();
-    protected Map<Genome, Integer> genomesCount = new LinkedHashMap<>();
+
+    //map parameters
     protected int grassEnergy;
     public int moveEnergy;
     protected int startEnergy;
@@ -20,6 +25,8 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     public boolean isMagic;
     protected Vector2d jungleLowerLeft;
     protected Vector2d jungleUpperRight;
+
+    //statistics
     public int epoch = 1;
     public int animalCount = 0;
     public int grassCount = 0;
@@ -27,8 +34,13 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
     public double childrenAvg = 0;
     public double lifeSpanAvg = 0;
     public int deadAnimalsCount = 0;
+    protected Map<Genome, Integer> genomesCount = new LinkedHashMap<>();
+    private final List<String> statisticsHist = new ArrayList<>();
     public Genome mostCommonGenome;
+
+    //variables for tracking animal
     public Animal selectedAnimal = null;
+    public int trackStartTime = -1;
 
     public List<Animal> animalsAt(Vector2d position) {
         return animals.get(position);
@@ -59,6 +71,8 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         int tries = 0;
         boolean placed = false;
         Grass newGrass = null;
+        //try random position for new grass (jungleSize) times, if not found, don't place since
+        //map is almost full
         while (tries < jungleSize && !placed) {
             int x = (int) (Math.random()*(jungleUpperRight.x-jungleLowerLeft.x + 1) + jungleLowerLeft.x);
             int y = (int) (Math.random()*(jungleUpperRight.y-jungleLowerLeft.y + 1) + jungleLowerLeft.y);
@@ -78,6 +92,8 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         int tries = 0;
         boolean placed = false;
         Grass newGrass = null;
+        //try random position for new grass (width*height) times, if not found, don't place grass
+        //since map is almost full
         while (tries < mapSize && !placed) {
             int x = (int) (Math.random()*width);
             int y = (int) (Math.random()*height);
@@ -110,6 +126,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
             int count = genomesCount.get(animal.getGenome());
             genomesCount.put(animal.getGenome(), count + 1);
         }
+
         animalsList.add(animal);
         if (animals.get(animal.getPosition()) == null) {
             List<Animal> newList = new ArrayList<>();
@@ -202,6 +219,7 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
             if (animal.getEnergy() <= 0) {
                 lifeSpanAvg = (lifeSpanAvg*deadAnimalsCount + epoch - animal.getEpochBorn()) / (deadAnimalsCount+1);
                 deadAnimalsCount++;
+                animal.setEpochDied(epoch);
                 toDeletion.add(animal);
             }
         }
@@ -292,7 +310,20 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
 
         animal1.decreaseEnergy(energy1);
         animal2.decreaseEnergy(energy2);
-        return new Animal(animal1.getPosition(), this, new Genome(newGenome), energy1 + energy2, epoch);
+        Animal newAnimal = new Animal(animal1.getPosition(), this, new Genome(newGenome), energy1 + energy2, epoch);
+        if (selectedAnimal != null && ((animal1.isSelectedDescendant && animal1.getEpochBorn() > trackStartTime)
+                || (animal2.isSelectedDescendant && animal2.getEpochBorn() > trackStartTime))) {
+            selectedAnimal.incrementDescendants();
+            newAnimal.isSelectedDescendant = true;
+        }
+
+        if (animal1 == selectedAnimal || animal2 == selectedAnimal) {
+            selectedAnimal.incrementDescendants();
+            selectedAnimal.incrementTrackedChildren();
+            newAnimal.isSelectedDescendant = true;
+        }
+
+        return newAnimal;
     }
 
     public int getWidth() {
@@ -315,5 +346,21 @@ abstract public class AbstractWorldMap implements IPositionChangeObserver{
         }
 
         return toPlace;
+    }
+
+    public void updateStatisticsHist() {
+        String newStat = epoch + "," + animalCount + "," + grassCount + "," + energyAvg + "," + lifeSpanAvg + "," + childrenAvg;
+        statisticsHist.add(newStat);
+    }
+
+    public void saveLogs(String fileName) {
+        File outputFile = new File(fileName + ".csv");
+        try (PrintWriter pw = new PrintWriter(outputFile)) {
+            pw.println("epoch,animalCount,grassCount,energyAvg,lifespanAvg,childrenAvg");
+            statisticsHist.forEach(pw::println);
+        } catch (FileNotFoundException e) {
+            System.out.println("Cannot create file, didn't save");
+            e.printStackTrace();
+        }
     }
 }

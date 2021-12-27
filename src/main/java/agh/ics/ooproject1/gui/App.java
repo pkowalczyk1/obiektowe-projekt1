@@ -6,9 +6,7 @@ import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
 import javafx.scene.layout.*;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 import java.util.List;
@@ -59,6 +57,13 @@ public class App extends Application implements IGuiObserver {
 
             thread1.start();
             thread2.start();
+
+            primaryStage.setOnCloseRequest((e) -> {
+                engine1.isGoing = false;
+                engine2.isGoing = false;
+                thread1.resume();
+                thread2.resume();
+            });
         });
 
         main.setPrefWidth(800);
@@ -86,6 +91,10 @@ public class App extends Application implements IGuiObserver {
                     alert.setContentText("Magic spawn " + engine1.magicCount + "/3");
                     alert.show();
                 }
+
+                if (map.selectedAnimal != null) {
+                    mapBoxLeft.showStatistics(map.selectedAnimal);
+                }
             }
             else {
                 mapBoxRight.refresh(toPlace, toDeletion);
@@ -99,6 +108,10 @@ public class App extends Application implements IGuiObserver {
                     alert.setHeaderText("Right map");
                     alert.setContentText("Magic spawn " + engine2.magicCount + "/3");
                     alert.show();
+                }
+
+                if (map.selectedAnimal != null) {
+                    mapBoxRight.showStatistics(map.selectedAnimal);
                 }
             }
         });

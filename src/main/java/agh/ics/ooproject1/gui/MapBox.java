@@ -19,12 +19,14 @@ public class MapBox {
     private final HBox mapAndCharts;
     private final VBox statistics;
     private final VBox chartBox;
+    private final HBox buttons;
     private final VBox mapAndButton;
     private final Button startStop;
+    private final Button saveLogs;
     private final GridPane grid;
     private final Label mostCommonGenome;
+    private final VBox oneAnimalClicked;
     private final VBox oneAnimalStatistics;
-    private final Label magicWarning = new Label();
     private final Map<Vector2d, Pane> placedGrass = new LinkedHashMap<>();
     private final List<Pane> placedAnimals = new ArrayList<>();
 
@@ -37,17 +39,22 @@ public class MapBox {
         mapAndCharts = new HBox(15);
         statistics = new VBox(5);
         chartBox = new VBox(10);
+        buttons = new HBox(10);
         mapAndButton = new VBox(10);
         startStop = new Button("Start/stop");
+        saveLogs = new Button("Save statistics to CSV");
         grid = new GridPane();
+        oneAnimalClicked = new VBox(10);
         oneAnimalStatistics = new VBox(10);
         mostCommonGenome = new Label("Most common genome: " + this.map.mostCommonGenome);
         statistics.getChildren().add(mostCommonGenome);
         makeGrid(new ArrayList<>(), new ArrayList<>());
-        mapAndButton.getChildren().addAll(grid, startStop, oneAnimalStatistics);
+        buttons.getChildren().addAll(startStop, saveLogs);
+        mapAndButton.getChildren().addAll(grid, buttons, oneAnimalClicked, oneAnimalStatistics);
         chartBox.getChildren().addAll(charts.getAllCharts());
         mapAndCharts.getChildren().addAll(chartBox, mapAndButton);
         wrapper.getChildren().addAll(mapAndCharts, statistics);
+
         startStop.setOnAction((event) -> {
             this.engine.flag = !this.engine.flag;
             if (this.engine.flag) {
@@ -55,6 +62,15 @@ public class MapBox {
             }
             else {
                 this.thread.suspend();
+            }
+        });
+
+        saveLogs.setOnAction((event) -> {
+            if (map instanceof UnboundedMap) {
+                map.saveLogs("src\\main\\java\\resources\\unbounded_map_statistics");
+            }
+            else {
+                map.saveLogs("src\\main\\java\\resources\\bounded_map_statistics");
             }
         });
     }
@@ -106,7 +122,9 @@ public class MapBox {
         for (Animal animal : toPlace) {
             Pane pane = new StackPane();
             pane.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
-                showStatistics(animal);
+                showGenome(animal);
+                oneAnimalStatistics.getChildren().clear();
+                map.selectedAnimal = null;
             });
             pane.setPrefSize(cellSize, cellSize);
             Rectangle shape = animal.getImage();
@@ -118,9 +136,38 @@ public class MapBox {
         }
     }
 
+    public void showGenome(Animal animal) {
+        oneAnimalClicked.getChildren().clear();
+        Label genome = new Label("Chosen animal genome: " + animal.getGenome());
+        Button track = new Button("Toggle track");
+        track.setOnAction((event) -> {
+            if (map.selectedAnimal == null) {
+                showStatistics(animal);
+                map.selectedAnimal = animal;
+                map.trackStartTime = map.epoch;
+            }
+            else {
+                map.selectedAnimal.resetDescendants();
+                map.selectedAnimal.resetTrackedChildren();
+                map.selectedAnimal = null;
+                map.trackStartTime = -1;
+                oneAnimalStatistics.getChildren().clear();
+            }
+        });
+        oneAnimalClicked.getChildren().addAll(genome, track);
+    }
+
     public void showStatistics(Animal animal) {
         oneAnimalStatistics.getChildren().clear();
-        Label genome = new Label("Chosen animal genome: " + animal.getGenome());
-        oneAnimalStatistics.getChildren().add(genome);
+        Label childrenCount = new Label("Tracked animal children count: " + animal.getTrackedChildren());
+        Label descendantsCount = new Label("Tracked animal descendants count: " + animal.getDescendants());
+        Label epochDied;
+        if (animal.getEpochDied() == -1) {
+            epochDied = new Label("Tracked animal is still alive!");
+        }
+        else {
+            epochDied = new Label("Tracked animal died in epoch " + animal.getEpochDied());
+        }
+        oneAnimalStatistics.getChildren().addAll(childrenCount, descendantsCount, epochDied);
     }
 }

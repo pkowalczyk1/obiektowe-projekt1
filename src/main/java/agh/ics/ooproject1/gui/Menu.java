@@ -68,12 +68,18 @@ public class Menu {
         if (!isNumeric(widthText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
+        if (Integer.parseInt(widthText.getText()) > 200) {
+            throw new IllegalArgumentException("Too wide map");
+        }
         return Integer.parseInt(widthText.getText());
     }
 
     public int getHeight() throws IllegalArgumentException {
         if (!isNumeric(heightText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
+        }
+        if (Integer.parseInt(heightText.getText()) > 200) {
+            throw new IllegalArgumentException("Too high map");
         }
         return Integer.parseInt(heightText.getText());
     }
@@ -103,6 +109,9 @@ public class Menu {
         if (!isNumeric(jungleRatioText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
+        if (Double.parseDouble(jungleRatioText.getText()) > 1) {
+            throw new IllegalArgumentException("Jungle ratio cannot be greater than 1");
+        }
         return Double.parseDouble(jungleRatioText.getText());
     }
 
@@ -110,14 +119,17 @@ public class Menu {
         if (!isNumeric(animalCountText.getText())) {
             throw new IllegalArgumentException("Start parameters should be numbers, not texts");
         }
+        if (Integer.parseInt(animalCountText.getText()) > Integer.parseInt(widthText.getText())*Integer.parseInt(heightText.getText())) {
+            throw new IllegalArgumentException("Animal count cannot be greater than map size");
+        }
         return Integer.parseInt(animalCountText.getText());
     }
 
-    public boolean getLeftMapStrategy() throws IllegalArgumentException {
+    public boolean getLeftMapStrategy() {
         return leftMapStrategy.isSelected();
     }
 
-    public boolean getRightMapStrategy() throws IllegalArgumentException {
+    public boolean getRightMapStrategy() {
         return rightMapStrategy.isSelected();
     }
 

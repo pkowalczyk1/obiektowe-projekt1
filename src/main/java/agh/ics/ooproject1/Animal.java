@@ -15,6 +15,10 @@ public class Animal implements IWorldMapElement {
     private final List<IPositionChangeObserver> observers = new ArrayList<>();
     private final int epochBorn;
     private int children = 0;
+    private int descendants = 0;
+    public boolean isSelectedDescendant = false;
+    private int epochDied = -1;
+    private int trackedChildren = 0;
 
     public Animal(Vector2d position, AbstractWorldMap map, Genome genome, int energy, int epoch) {
         this.position = position;
@@ -165,12 +169,44 @@ public class Animal implements IWorldMapElement {
         return epochBorn;
     }
 
+    public int getEpochDied() {
+        return epochDied;
+    }
+
     public int getChildren() {
         return children;
     }
 
+    public int getDescendants() {
+        return descendants;
+    }
+
+    public int getTrackedChildren() {
+        return trackedChildren;
+    }
+
     public void incrementChildren() {
         children++;
+    }
+
+    public void setEpochDied(int epoch) {
+        epochDied = epoch;
+    }
+
+    public void incrementDescendants() {
+        descendants++;
+    }
+
+    public void incrementTrackedChildren() {
+        trackedChildren++;
+    }
+
+    public void resetDescendants() {
+        descendants = 0;
+    }
+
+    public void resetTrackedChildren() {
+        trackedChildren = 0;
     }
 
     @Override
